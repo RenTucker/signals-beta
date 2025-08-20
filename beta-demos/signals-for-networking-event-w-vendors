@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SIG∴NALS™ Networking Wristband – Prototype (Updated)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0b0f;
+      --card:#111119;
+      --muted:#1b1b25;
+      --line:#222233;
+      --text:#e8e8ef;
+      --sub:#a7a7bf;
+      --accent:#6fffe1; /* neon teal */
+      --accent2:#a866ff; /* electric purple */
+    }
+    html,body{height:100%;}
+    body{background: radial-gradient(1200px 600px at 110% -10%, rgba(168,102,255,.15), transparent 40%),
+                      radial-gradient(900px 500px at -10% 110%, rgba(111,255,225,.12), transparent 40%),
+                      var(--bg);
+         color:var(--text); font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;}
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)) , var(--card);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+      backdrop-filter: blur(6px);
+    }
+    .btn-primary{
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      color:#061015;
+      font-weight:800;
+      letter-spacing:.2px;
+      position:relative;
+      overflow:hidden;
+      transition: transform .18s ease, filter .18s ease;
+    }
+    .btn-primary:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+    .btn-primary:active{ transform: translateY(0px) scale(.99); }
+    .btn-outline{
+      background: transparent;
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      transition: background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .btn-outline:hover{
+      background: rgba(168,102,255,.1);
+      border-color: rgba(168,102,255,.35);
+      transform: translateY(-1px);
+    }
+    .progress{ background: linear-gradient(90deg, var(--accent), var(--accent2)); box-shadow: 0 0 16px rgba(168,102,255,.35), 0 0 28px rgba(111,255,225,.2);}    
+    .black-card{ position:relative; background: linear-gradient(140deg, #0c0c12 0%, #0a0a0f 30%, #0e0e14 60%, #09090d 100%); border-radius:20px; border:1px solid rgba(255,255,255,.07); box-shadow: 0 20px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04); overflow:hidden; isolation:isolate; }
+    .shine::before{ content:""; position:absolute; inset:-40% -80% auto auto; height:300%; width:50%; transform: rotate(25deg) translateX(-120%); background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.08) 50%, rgba(255,255,255,0) 100%); filter: blur(8px); animation: sweep 4.8s infinite ease-in-out; }
+    @keyframes sweep{ 0%{ transform: rotate(25deg) translateX(-130%); opacity:.0;} 35%{ opacity:.9;} 60%{ transform: rotate(25deg) translateX(160%); opacity:.0;} 100%{ transform: rotate(25deg) translateX(160%); opacity:.0;} }
+    .tag{ border:1px solid rgba(255,255,255,.14); color:#dfe7ff; user-select:none; transition: all .15s ease; }
+    .tag.active{ background: linear-gradient(135deg, rgba(168,102,255,.22), rgba(111,255,225,.22)); border-color: rgba(168,102,255,.5); color:white; box-shadow: 0 0 0 2px rgba(168,102,255,.15) inset; }
+    .banner{ background: linear-gradient(90deg, rgba(168,102,255,.2), rgba(111,255,225,.2)); border:1px dashed rgba(255,255,255,.18); color:#e9e9ff; }
+    .tabbar{background: rgba(12,12,20,.7); border-top:1px solid rgba(255,255,255,.08); backdrop-filter: blur(8px);} .tabitem{color:#bfc3d6;} .tabitem.active{color:white;}
+    .dot{ width:8px;height:8px;border-radius:999px;background:linear-gradient(135deg,var(--accent2),var(--accent)); box-shadow:0 0 12px rgba(168,102,255,.65);}    
+    .avatar{ background: linear-gradient(135deg, rgba(168,102,255,.25), rgba(111,255,225,.25)); border:1px solid rgba(255,255,255,.15); color:white; font-weight:800; }
+    .input{ background: #0e0e16; border:1px solid rgba(255,255,255,.1); color:var(--text); transition: border-color .18s ease, box-shadow .18s ease; }
+    .input:focus{ outline:none; border-color: rgba(168,102,255,.5); box-shadow: 0 0 0 4px rgba(168,102,255,.15); }
+    .export-btn { background: #0f0f16; border:1px solid rgba(255,255,255,.12); color:#e8e8ef; transition: transform .15s ease, background .15s ease, border-color .15s ease; }
+    .export-btn:hover{ background: rgba(168,102,255,.1); border-color: rgba(168,102,255,.35); transform: translateY(-1px); }
+    .sep{border-top:1px solid rgba(255,255,255,.08);}    
+    #app{min-height:100dvh;}
+
+    /* NFC pulse (replaces button) */
+    .pulse-wrap{position:relative; width:132px; height:132px; margin:0 auto;}
+    .pulse-core{position:absolute; inset:0; margin:auto; width:88px; height:88px; border-radius:9999px; background: radial-gradient(circle at 35% 35%, var(--accent) 0%, var(--accent2) 60%, #0c0c14 62%); box-shadow:0 0 24px rgba(111,255,225,.35);}
+    .pulse-ring{position:absolute; inset:0; margin:auto; width:132px; height:132px; border-radius:9999px; border:2px solid rgba(111,255,225,.45); animation:pulse 1.6s ease-out infinite;}
+    .pulse-ring:nth-child(2){ width:156px; height:156px; border-color: rgba(168,102,255,.35); animation-delay:.25s;}
+    .pulse-ring:nth-child(3){ width:180px; height:180px; border-color: rgba(111,255,225,.25); animation-delay:.5s;}
+    @keyframes pulse{ 0%{ transform: scale(.6); opacity:.85;} 70%{ transform: scale(1); opacity:.15;} 100%{ transform: scale(1.05); opacity:0; } }
+
+    /* Offline badge */
+    .offline{ background: #351b3f; border:1px solid #5a2d75; color:#efd9ff; }
+
+    /* Toggle switch */
+    .switch{position:relative; display:inline-block; width:46px; height:26px;}
+    .switch input{display:none;}
+    .slider{position:absolute; cursor:pointer; inset:0; background:#1a1a25; border:1px solid rgba(255,255,255,.15); transition:.2s; border-radius:999px;}
+    .slider:before{position:absolute; content:""; height:20px;width:20px; left:3px; bottom:2px; background:white; border-radius:50%; transition:.2s;}
+    input:checked + .slider{background:linear-gradient(90deg, var(--accent2), var(--accent)); border-color:transparent;}
+    input:checked + .slider:before{ transform: translateX(20px);} 
+  </style>
+</head>
+<body>
+  <div id="app" class="flex flex-col">
+    <!-- Header -->
+    <header class="px-5 md:px-8 pt-6 pb-4">
+      <div class="max-w-5xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="dot"></div>
+          <div class="text-xl md:text-2xl font-extrabold tracking-tight">
+            SIG∴NALS<span class="text-[10px] align-super ml-1 font-black">TM</span>
+            <span class="ml-2 text-xs md:text-sm font-semibold text-[color:var(--sub)]">Networking Wristband</span>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-2">
+          <span id="netBadge" class="text-xs px-2 py-1 rounded-full border offline hidden">Queued offline</span>
+          <span class="text-xs text-[color:var(--sub)]">Premium • Tech-forward • Minimal</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-1 px-5 md:px-8 pb-28">
+      <div class="max-w-5xl mx-auto grid md:grid-cols-12 gap-6">
+
+        <!-- Check-In (NFC-first, no button) -->
+        <section id="screen-checkin" class="md:col-span-12 glass rounded-2xl p-6 md:p-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div class="flex items-center gap-3">
+              <div class="dot"></div>
+              <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight">Event check-in</h2>
+            </div>
+            <div class="text-sm text-[color:var(--sub)]">Tap wristband to start • Or use QR</div>
+          </div>
+
+          <div class="mt-6 grid md:grid-cols-2 gap-6">
+            <!-- Left: Waiting for NFC + QR fallback -->
+            <div class="rounded-xl p-6 glass">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-[color:var(--muted)]">
+                    <svg width="22" height="22" viewBox="0 0 24 24" class="text-[color:var(--accent)]"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v16a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1Zm6 4a1 1 0 0 1 1 1v10a1 1 0 1 1-2 0V8a1 1 0 0 1 1-1ZM6 8a1 1 0 0 1 1 1v6a1 1 0 1 1-2 0V9a1 1 0 0 1 1-1Z"/></svg>
+                  </div>
+                  <div>
+                    <div class="font-bold">SIG∴NALS™</div>
+                    <div class="text-xs text-[color:var(--sub)]">NFC ready</div>
+                  </div>
+                </div>
+                <div id="nfcStatus" class="text-xs px-2 py-1 rounded-full bg-[color:var(--muted)]/60 border border-white/10">Listening…</div>
+              </div>
+
+              <div class="mt-8 text-center">
+                <div class="pulse-wrap">
+                  <div class="pulse-ring"></div>
+                  <div class="pulse-ring"></div>
+                  <div class="pulse-ring"></div>
+                  <div class="pulse-core rounded-full"></div>
+                </div>
+                <div class="mt-4 text-sm text-[color:var(--sub)]">Tap your wristband to begin</div>
+
+                <div class="mt-6 rounded-xl border border-white/10 bg-[#0c0c14] p-6">
+                  <div class="text-sm font-semibold">No NFC?</div>
+                  <div class="text-xs text-[color:var(--sub)]">Scan the QR to check in</div>
+                  <div class="mt-3 grid grid-cols-3 gap-3 items-center">
+                    <div class="col-span-2 h-28 rounded-lg bg-[#0e0e16] border border-white/10 flex items-center justify-center text-xs text-[color:var(--sub)]">QR placeholder</div>
+                    <div class="text-xs text-left text-[color:var(--sub)]">Short URL
+                      <div class="mt-1 font-mono text-[10px]">thrveos.com/t/UID123</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Dev-only simulator for desktop demo -->
+                <button id="simulateTap" class="mt-6 btn-outline rounded-xl px-4 py-2 text-xs">Simulate NFC tap</button>
+              </div>
+            </div>
+
+            <!-- Right: Form + Consent (required) -->
+            <div class="rounded-xl p-6 glass">
+              <div class="text-[color:var(--sub)] text-sm">Step 2</div>
+              <div class="text-xl font-bold mt-1">Finish check-in</div>
+
+              <div class="mt-4 grid gap-4">
+                <label class="grid gap-2">
+                  <span class="text-sm text-[color:var(--sub)]">Full name</span>
+                  <input id="nameInput" class="input rounded-xl px-4 py-3" placeholder="Alex Morgan" />
+                </label>
+                <label class="grid gap-2">
+                  <span class="text-sm text-[color:var(--sub)]">Email</span>
+                  <input id="emailInput" class="input rounded-xl px-4 py-3" placeholder="alex@company.com" />
+                </label>
+                <div class="sep my-1"></div>
+                <div class="grid gap-3">
+                  <div class="text-sm font-semibold">Consent</div>
+                  <label class="flex items-start gap-3 text-sm">
+                    <input id="consentShare" type="checkbox" class="mt-1" />
+                    <span>Share my contact info when my band is tapped</span>
+                  </label>
+                  <label class="flex items-start gap-3 text-sm">
+                    <input id="consentMarketing" type="checkbox" class="mt-1" />
+                    <span>Allow follow-up about SIG∴NALS™ upgrades</span>
+                  </label>
+                </div>
+                <button id="completeCheckin" class="btn-primary rounded-xl px-4 py-3 text-sm">Complete check-in</button>
+                <div id="checkinNote" class="hidden text-xs text-[color:var(--sub)]">Add your name, email, and consent to continue.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Digital Business Card -->
+        <section id="screen-card" class="md:col-span-12 glass rounded-2xl p-0 overflow-hidden hidden">
+          <div class="banner px-6 py-3 text-center text-sm font-semibold tracking-wide">
+            <span id="countdownLabel">30 days remaining on beta access</span>
+          </div>
+
+          <div class="p-6 md:p-8 bg-black">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div class="flex items-center gap-4">
+                <div id="avatar" class="avatar w-16 h-16 rounded-2xl flex items-center justify-center text-2xl">A</div>
+                <div>
+                  <div id="cardName" class="text-2xl md:text-3xl font-extrabold tracking-tight">Alex Morgan</div>
+                  <div id="cardCompany" class="text-sm text-[color:var(--sub)]">SignalWorks • Product Lead</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <a id="ctaPhone" href="tel:+10000000000" target="_blank" class="btn-outline rounded-xl px-4 py-2 text-sm flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.2c1.2 2.3 3 4.1 5.3 5.3l1.8-1.8c.2-.2.6-.3.9-.2c1 .3 2 .5 3 .5c.5 0 .9.4.9.9V19c0 .5-.4.9-.9.9C10.8 19.9 4.1 13.2 4.1 4.9C4.1 4.4 4.5 4 5 4h3.1c.5 0 .9.4.9.9c0 1 .2 2 .5 3c.1.3 0 .7-.2.9z"/></svg>
+                  Call
+                </a>
+                <a id="ctaEmail" href="mailto:alex@company.com" target="_blank" class="btn-outline rounded-xl px-4 py-2 text-sm flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M20 8v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8l8 5l8-5Zm-8 3L4 6h16l-8 5Z"/></svg>
+                  Email
+                </a>
+                <a id="ctaLinkedIn" href="https://www.linkedin.com" target="_blank" class="btn-outline rounded-xl px-4 py-2 text-sm flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M6.94 7.5A1.94 1.94 0 1 1 5 5.56A1.94 1.94 0 0 1 6.94 7.5ZM5.25 9h3.38v9.75H5.25Zm5.06 0h3.23v1.33h.05A3.54 3.54 0 0 1 17.8 9c3.59 0 4.26 2.36 4.26 5.42v4.33h-3.38v-3.84c0-.92 0-2.1-1.28-2.1s-1.48 1-1.48 2.04v3.9H12.3Z"/></svg>
+                  LinkedIn
+                </a>
+                <button id="shareQR" class="btn-primary rounded-xl px-4 py-2 text-sm">Share my contact (QR)</button>
+              </div>
+            </div>
+
+            <div class="mt-6 grid md:grid-cols-3 gap-6">
+              <div class="rounded-xl p-5 bg-[#0b0b12] border border-white/10">
+                <div class="text-[color:var(--sub)] text-sm">Role</div>
+                <div id="cardRole" class="mt-1 font-bold">Product Lead</div>
+              </div>
+              <div class="rounded-xl p-5 bg-[#0b0b12] border border-white/10">
+                <div class="text-[color:var(--sub)] text-sm">Company</div>
+                <div id="cardCompanyOnly" class="mt-1 font-bold">SignalWorks</div>
+              </div>
+              <div class="rounded-xl p-5 bg-[#0b0b12] border border-white/10 flex items-center justify-between">
+                <div>
+                  <div class="text-[color:var(--sub)] text-sm">Discoverability</div>
+                  <div class="mt-1 font-bold text-sm">Appear in attendee directory</div>
+                </div>
+                <label class="switch">
+                  <input id="discoverToggle" type="checkbox" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Upgrade Offer -->
+        <section id="screen-upgrade" class="md:col-span-12 glass rounded-2xl p-6 md:p-8 hidden">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="dot"></div>
+              <h3 class="text-2xl md:text-3xl font-extrabold tracking-tight">Upgrade offer</h3>
+            </div>
+            <div class="text-sm text-[color:var(--sub)]">Go premium in seconds</div>
+          </div>
+
+          <div class="mt-6 grid md:grid-cols-2 gap-6">
+            <div class="black-card shine p-6 md:p-8">
+              <div class="flex items-center justify-between">
+                <div class="text-lg font-bold tracking-wide">SIG∴NALS Black Card</div>
+                <div class="text-xs px-2 py-1 rounded-full bg-white/5 border border-white/10">Limited beta</div>
+              </div>
+              <div class="mt-8">
+                <div class="rounded-2xl p-6 border border-white/10 bg-gradient-to-br from-[#0a0a12] to-[#0b0b14]">
+                  <div class="flex items-center justify-between">
+                    <div class="text-sm text-[color:var(--sub)]">Member</div>
+                    <div class="text-xs text-[color:var(--sub)]">Tap-to-share</div>
+                  </div>
+                  <div class="mt-6 text-2xl font-extrabold tracking-wider">BLACK • CARD</div>
+                  <div class="mt-2 text-xs text-[color:var(--sub)]">Premium networking access</div>
+                  <div class="mt-6 h-10 rounded-lg overflow-hidden relative">
+                    <div class="absolute inset-0" style="background:linear-gradient(90deg,#181825,#2a2a40,#181825); filter:contrast(120%) brightness(110%);"></div>
+                    <div class="absolute inset-0 mix-blend-screen opacity-60" style="background: repeating-linear-gradient(90deg, rgba(255,255,255,.06) 0, rgba(255,255,255,.06) 6px, transparent 6px, transparent 12px);"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl p-6 bg-[#0b0b12] border border-white/10">
+              <div class="text-2xl font-extrabold">Upgrade today. Leave with your Black Card.</div>
+              <div class="mt-3 text-[color:var(--sub)]">Unlock priority networking, instant contact exchange, and VIP event lanes.</div>
+
+              <div class="mt-6 flex items-end gap-4">
+                <div class="text-4xl font-extrabold bg-gradient-to-r from-[color:var(--accent2)] to-[color:var(--accent)] bg-clip-text text-transparent">$30</div>
+                <div class="text-sm text-[color:var(--sub)]"><span class="line-through text-white/50">$50</span><span class="ml-2 text-white">Today only</span></div>
+              </div>
+
+              <div class="mt-6 flex items-center gap-3">
+                <button id="upgradeNow" class="btn-primary rounded-xl px-5 py-3">Upgrade now</button>
+                <button class="btn-outline rounded-xl px-4 py-3">Maybe later</button>
+              </div>
+
+              <div id="upgradeToast" class="hidden mt-4 text-sm px-3 py-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-200">
+                Awesome. This demo confirms the tap-to-upgrade flow. (Sample)
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Vendor Capture -->
+        <section id="screen-vendor" class="md:col-span-12 glass rounded-2xl p-6 md:p-8 hidden">
+          <div class="flex items-center gap-3"><div class="dot"></div><h3 class="text-2xl md:text-3xl font-extrabold tracking-tight">Vendor lead capture</h3></div>
+          <div class="mt-6 grid md:grid-cols-2 gap-6">
+            <div class="rounded-2xl p-6 bg-[#0b0b12] border border-white/10">
+              <div class="text-sm text-[color:var(--sub)]">Lead details</div>
+              <div class="mt-4 grid gap-4">
+                <label class="grid gap-2"><span class="text-sm text-[color:var(--sub)]">Name</span><input id="vendorName" class="input rounded-xl px-4 py-3" placeholder="Auto-filled from check-in" /></label>
+                <label class="grid gap-2"><span class="text-sm text-[color:var(--sub)]">Notes</span><textarea id="vendorNotes" class="input rounded-xl px-4 py-3 min-h-[120px]" placeholder="Conversation highlights, follow-ups…"></textarea></label>
+                <div>
+                  <div class="text-sm text-[color:var(--sub)] mb-2">Interest tags</div>
+                  <div id="tagGroup" class="flex flex-wrap gap-2">
+                    <button type="button" data-tag="Consulting" class="tag rounded-full px-3 py-1.5 text-xs">Consulting</button>
+                    <button type="button" data-tag="Partnerships" class="tag rounded-full px-3 py-1.5 text-xs">Partnerships</button>
+                    <button type="button" data-tag="Services" class="tag rounded-full px-3 py-1.5 text-xs">Services</button>
+                  </div>
+                </div>
+                <button id="saveLead" class="btn-primary rounded-xl px-4 py-3">Save lead</button>
+                <div id="leadToast" class="hidden text-sm px-3 py-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-200">Lead saved</div>
+              </div>
+            </div>
+            <div class="rounded-2xl p-6 bg-[#0b0b12] border border-white/10">
+              <div class="text-sm text-[color:var(--sub)]">Recent leads (sample)</div>
+              <div id="leadList" class="mt-3 grid gap-3 text-sm"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Organizer Dashboard -->
+        <section id="screen-dashboard" class="md:col-span-12 glass rounded-2xl p-6 md:p-8 hidden">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center gap-3"><div class="dot"></div><h3 class="text-2xl md:text-3xl font-extrabold tracking-tight">Organizer dashboard</h3></div>
+            <div class="flex items-center gap-2">
+              <button id="exportCSV" class="export-btn rounded-xl px-4 py-2 text-sm">Export CSV</button>
+              <button id="exportJSON" class="export-btn rounded-xl px-4 py-2 text-sm">Export JSON</button>
+            </div>
+          </div>
+
+          <div class="mt-6 grid md:grid-cols-3 gap-6">
+            <div class="rounded-2xl p-6 bg-[#0b0b12] border border-white/10">
+              <div class="text-sm text-[color:var(--sub)]">Live attendees</div>
+              <div class="mt-2 text-4xl font-extrabold" id="liveCount">0</div>
+              <div class="mt-2 text-xs text-[color:var(--sub)]">Updates as people check in</div>
+            </div>
+            <div class="rounded-2xl p-6 bg-[#0b0b12] border border-white/10 md:col-span-2">
+              <div class="flex items-center justify-between"><div class="text-sm text-[color:var(--sub)]">Arrivals over time</div><div class="text-xs text-[color:var(--sub)]">Sample data</div></div>
+              <div class="mt-3"><svg id="arrivalsChart" viewBox="0 0 640 200" class="w-full h-44"><line x1="40" y1="160" x2="620" y2="160" stroke="rgba(255,255,255,.2)" stroke-width="1"/><line x1="40" y1="20" x2="40" y2="160" stroke="rgba(255,255,255,.2)" stroke-width="1"/><g opacity=".2"><line x1="40" y1="120" x2="620" y2="120" stroke="white" stroke-width="1"/><line x1="40" y1="80" x2="620" y2="80" stroke="white" stroke-width="1"/><line x1="40" y1="40" x2="620" y2="40" stroke="white" stroke-width="1"/></g><path id="chartPath" fill="url(#grad)" stroke="url(#strokeGrad)" stroke-width="3" d=""></path><defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(168,102,255,.35)"/><stop offset="100%" stop-color="rgba(111,255,225,.05)"/></linearGradient><linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="var(--accent2)"/><stop offset="100%" stop-color="var(--accent)"/></linearGradient></defs></svg></div>
+            </div>
+          </div>
+
+          <div class="mt-6 grid md:grid-cols-2 gap-6">
+            <div class="rounded-2xl p-6 bg-[#0b0b12] border border-white/10">
+              <div class="text-sm text-[color:var(--sub)] mb-3">Recent check-ins (sample)</div>
+              <div id="recentCheckins" class="grid gap-3 text-sm"></div>
+            </div>
+            <div class="rounded-2xl p-6 bg-[#0b0b12] border border-white/10">
+              <div class="text-sm text-[color:var(--sub)] mb-3">Admin actions</div>
+              <div class="grid gap-3 text-sm">
+                <div class="grid md:grid-cols-2 gap-3">
+                  <input id="reassignFrom" class="input rounded-xl px-3 py-2" placeholder="Old UID" />
+                  <input id="reassignTo" class="input rounded-xl px-3 py-2" placeholder="New UID" />
+                </div>
+                <div class="flex gap-3">
+                  <button id="reassignBtn" class="btn-outline rounded-xl px-4 py-2">Reassign band</button>
+                  <button id="suspendBtn" class="btn-outline rounded-xl px-4 py-2">Suspend band</button>
+                </div>
+                <div id="adminToast" class="hidden text-xs px-3 py-2 rounded-lg bg-white/10 border border-white/20">Action queued</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Tab Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 tabbar">
+      <div class="max-w-5xl mx-auto px-5 md:px-8">
+        <div class="grid grid-cols-5 gap-1">
+          <button data-nav="screen-checkin" class="tabitem py-3 flex flex-col items-center justify-center gap-1 text-xs">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M11 2v9H2V2zm11 0v9h-9V2zM11 13v9H2v-9zm11 0v9h-9v-9z"/></svg>
+            Check-in
+          </button>
+          <button data-nav="screen-card" class="tabitem py-3 flex flex-col items-center justify-center gap-1 text-xs">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3H2zM2 12h20v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/></svg>
+            Card
+          </button>
+          <button data-nav="screen-upgrade" class="tabitem py-3 flex flex-col items-center justify-center gap-1 text-xs">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M5 12l5 5L20 7"/></svg>
+            Upgrade
+          </button>
+          <button data-nav="screen-vendor" class="tabitem py-3 flex flex-col items-center justify-center gap-1 text-xs">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M3 4h18v4H3zm0 6h18v10H3z"/></svg>
+            Vendor
+          </button>
+          <button data-nav="screen-dashboard" class="tabitem py-3 flex flex-col items-center justify-center gap-1 text-xs">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M3 13h4v8H3zm7-6h4v14h-4zm7-4h4v18h-4z"/></svg>
+            Dashboard
+          </button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- QR Modal -->
+  <div id="qrModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-6 z-50">
+    <div class="glass max-w-sm w-full rounded-2xl p-6">
+      <div class="flex items-center justify-between">
+        <div class="text-lg font-bold">Share my contact</div>
+        <button id="closeQR" class="btn-outline rounded-lg px-2 py-1 text-xs">Close</button>
+      </div>
+      <div class="mt-4 h-48 rounded-xl bg-[#0e0e16] border border-white/10 flex items-center justify-center text-xs text-[color:var(--sub)]">QR placeholder</div>
+      <div class="mt-3 text-xs text-[color:var(--sub)]">Let others scan to save your details</div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    const state = {
+      tapped:false,
+      progress:0,
+      attendee:{ name:"Alex Morgan", email:"alex@company.com", phone:"+10000000000", company:"SignalWorks", role:"Product Lead", linkedin:"https://www.linkedin.com/in/sample", discoverable:true, consent_share:false, consent_marketing:false },
+      attendeesLog: [],
+      leads: [],
+      liveCount: 0,
+      chartData: [2,4,6,9,13,18,20,22,24,28,31,35],
+      betaEndsAt: Date.now() + (30*24*60*60*1000) // 30 days from now
+    };
+
+    // Screens
+    const screens = { checkin: 'screen-checkin', card: 'screen-card', upgrade: 'screen-upgrade', vendor: 'screen-vendor', dashboard: 'screen-dashboard' };
+    const tabItems = Array.from(document.querySelectorAll('[data-nav]'));
+    function show(screenId){
+      Object.values(screens).forEach(id=>document.getElementById(id).classList.add('hidden'));
+      document.getElementById(screenId).classList.remove('hidden');
+      tabItems.forEach(t=>{ if(t.getAttribute('data-nav')===screenId) t.classList.add('active'); else t.classList.remove('active'); });
+      if(screenId==='screen-vendor'){ document.getElementById('vendorName').value = state.attendee.name || ''; }
+      if(screenId==='screen-dashboard'){ renderRecentCheckins(); }
+    }
+    show(screens.checkin);
+
+    // Network status
+    const netBadge = document.getElementById('netBadge');
+    function updateNet(){ if(navigator.onLine){ netBadge.classList.add('hidden'); } else { netBadge.classList.remove('hidden'); } }
+    window.addEventListener('online', updateNet); window.addEventListener('offline', updateNet); updateNet();
+
+    // NFC simulation (dev-only). In production, Web NFC listener would replace this.
+    const nfcStatus = document.getElementById('nfcStatus');
+    document.getElementById('simulateTap').addEventListener('click', ()=>{ handleNFCTag('UID123'); });
+    function handleNFCTag(uid){
+      state.tapped = true; nfcStatus.textContent = `Tag detected: ${uid}`;
+    }
+
+    // Check-in complete
+    const completeBtn = document.getElementById('completeCheckin');
+    const checkinNote = document.getElementById('checkinNote');
+    completeBtn.addEventListener('click', ()=>{
+      const name = document.getElementById('nameInput').value.trim();
+      const email = document.getElementById('emailInput').value.trim();
+      const consentShare = document.getElementById('consentShare').checked;
+      const consentMarketing = document.getElementById('consentMarketing').checked;
+
+      if(!state.tapped){ checkinNote.classList.remove('hidden'); checkinNote.textContent = 'Tap wristband to start.'; return; }
+      if(!name || !email || !consentShare){ checkinNote.classList.remove('hidden'); checkinNote.textContent = 'Add name, email, and agree to share contact at tap.'; return; }
+
+      state.attendee = { ...state.attendee, name, email, consent_share: consentShare, consent_marketing: consentMarketing };
+
+      const entry = { id:Date.now(), name, email, ts:new Date().toISOString(), device:navigator.userAgent };
+      state.attendeesLog.unshift(entry); state.liveCount += 1; updateLiveCount(); updateCardFromState();
+
+      checkinNote.classList.remove('hidden'); checkinNote.textContent = 'Nice. You’re in. Jumping to your card…';
+      setTimeout(()=> { show(screens.card); }, 650);
+    });
+
+    // Card updates
+    function initialsFromName(n){ if(!n) return 'A'; const parts = n.trim().split(/\s+/).slice(0,2); return parts.map(p=>p[0]?.toUpperCase()).join('') || 'A'; }
+    function updateCardFromState(){
+      document.getElementById('cardName').textContent = state.attendee.name || '—';
+      document.getElementById('cardCompany').textContent = (state.attendee.company || '—') + ' • ' + (state.attendee.role || '—');
+      document.getElementById('cardCompanyOnly').textContent = state.attendee.company || '—';
+      document.getElementById('cardRole').textContent = state.attendee.role || '—';
+      document.getElementById('avatar').textContent = initialsFromName(state.attendee.name);
+      document.getElementById('ctaPhone').setAttribute('href', 'tel:'+(state.attendee.phone||''));
+      document.getElementById('ctaEmail').setAttribute('href', 'mailto:'+(state.attendee.email||''));
+      document.getElementById('ctaLinkedIn').setAttribute('href', state.attendee.linkedin || 'https://www.linkedin.com');
+      document.getElementById('discoverToggle').checked = !!state.attendee.discoverable;
+    }
+    updateCardFromState();
+
+    // Discoverability toggle
+    document.getElementById('discoverToggle').addEventListener('change', (e)=>{ state.attendee.discoverable = !!e.target.checked; });
+
+    // Share QR modal (placeholder)
+    const qrModal = document.getElementById('qrModal');
+    document.getElementById('shareQR').addEventListener('click', ()=>{ qrModal.classList.remove('hidden'); qrModal.classList.add('flex'); });
+    document.getElementById('closeQR').addEventListener('click', ()=>{ qrModal.classList.add('hidden'); qrModal.classList.remove('flex'); });
+
+    // Upgrade flow demo
+    const upgradeToast = document.getElementById('upgradeToast');
+    document.getElementById('upgradeNow').addEventListener('click', ()=>{ upgradeToast.classList.remove('hidden'); setTimeout(()=> upgradeToast.classList.add('hidden'), 3000); });
+
+    // Vendor tags + leads
+    const tagGroup = document.getElementById('tagGroup');
+    tagGroup.addEventListener('click', (e)=>{ const btn = e.target.closest('button[data-tag]'); if(!btn) return; btn.classList.toggle('active'); });
+    const leadToast = document.getElementById('leadToast');
+    const leadList = document.getElementById('leadList');
+    document.getElementById('saveLead').addEventListener('click', ()=>{
+      const name = document.getElementById('vendorName').value.trim() || state.attendee.name || 'Unknown';
+      const notes = document.getElementById('vendorNotes').value.trim();
+      const tags = Array.from(document.querySelectorAll('#tagGroup .tag.active')).map(t=>t.dataset.tag);
+      const lead = { id: Date.now(), name, notes, tags, ts: new Date().toISOString() };
+      state.leads.unshift(lead); renderLeads();
+      leadToast.classList.remove('hidden'); setTimeout(()=> leadToast.classList.add('hidden'), 2500);
+      document.getElementById('vendorNotes').value = ''; document.querySelectorAll('#tagGroup .tag.active').forEach(el=>el.classList.remove('active'));
+    });
+    function renderLeads(){
+      if(!state.leads.length){ leadList.innerHTML = '<div class="text-[color:var(--sub)]">No leads yet. Add your first one.</div>'; return; }
+      leadList.innerHTML = state.leads.slice(0,6).map(l=>{
+        const tagHTML = (l.tags||[]).map(t=>`<span class="tag active rounded-full px-2.5 py-1 text-[10px]">${t}</span>`).join(' ');
+        const when = new Date(l.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        return `<div class="rounded-xl p-4 bg-[#0c0c14] border border-white/10 flex items-start justify-between gap-3"><div><div class="font-semibold">${l.name}</div><div class="text-xs text-[color:var(--sub)] mt-0.5">${when}</div>${l.notes ? `<div class="text-sm mt-2">${l.notes}</div>` : ''}<div class="mt-2 flex flex-wrap gap-1.5">${tagHTML}</div></div><div class="avatar w-10 h-10 rounded-xl flex items-center justify-center text-xs">${initialsFromName(l.name)}</div></div>`;
+      }).join('');
+    }
+    renderLeads();
+
+    // Dashboard: live count, arrivals chart, recent check-ins
+    const liveCountEl = document.getElementById('liveCount');
+    function updateLiveCount(){ liveCountEl.textContent = state.liveCount.toString(); }
+    function renderRecentCheckins(){
+      const container = document.getElementById('recentCheckins');
+      if(!state.attendeesLog.length){ container.innerHTML = '<div class="text-[color:var(--sub)]">No check-ins yet.</div>'; return; }
+      container.innerHTML = state.attendeesLog.slice(0,6).map(a=>{
+        const when = new Date(a.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        return `<div class="rounded-xl p-4 bg-[#0c0c14] border border-white/10 flex items-center justify-between"><div class="flex items-center gap-3"><div class="avatar w-10 h-10 rounded-xl flex items-center justify-center text-xs">${initialsFromName(a.name)}</div><div><div class="font-semibold">${a.name}</div><div class="text-xs text-[color:var(--sub)]">${when}</div></div></div><div class="text-xs text-[color:var(--sub)]">${a.email}</div></div>`;
+      }).join('');
+    }
+
+    function drawChart(){
+      const w = 640, h = 200, px = 40, py = 160; const data = state.chartData; const max = Math.max(...data, 1); const dx = (w - px - 20) / (data.length - 1); const scaleY = (v)=> (py - (v / max) * (py - 40)); const points = data.map((v,i)=> [px + i*dx, scaleY(v)]);
+      let d = ''; points.forEach((p,i)=>{ if(i===0){ d += `M ${p[0]} ${p[1]}`; } else { const cp1x = points[i-1][0] + dx/2; const cp1y = points[i-1][1]; const cp2x = p[0] - dx/2; const cp2y = p[1]; d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p[0]} ${p[1]}`; } });
+      const last = points[points.length-1]; d += ` L ${last[0]} ${py} L ${px} ${py} Z`;
+      document.getElementById('chartPath').setAttribute('d', d);
+    }
+    function addChartTick(){ const next = (state.chartData[state.chartData.length-1] || 0) + Math.max(0, Math.round((Math.random()*3))); state.chartData.push(next); if(state.chartData.length > 14) state.chartData.shift(); drawChart(); }
+
+    updateLiveCount(); renderRecentCheckins(); drawChart();
+
+    // Simulate organic arrivals for demo
+    setInterval(()=>{ if(Math.random() < 0.35){ state.liveCount += 1; const entry = { id:Date.now(), name:`Guest ${state.liveCount}`, email:`guest${state.liveCount}@example.com`, ts:new Date().toISOString() }; state.attendeesLog.unshift(entry); if(state.attendeesLog.length > 30) state.attendeesLog.pop(); updateLiveCount(); renderRecentCheckins(); addChartTick(); } }, 3000);
+
+    // Export helpers
+    function download(filename, content, type='text/plain'){ const blob = new Blob([content], {type}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 100); }
+    document.getElementById('exportCSV').addEventListener('click', ()=>{ const rows = [['Name','Email','Timestamp']]; state.attendeesLog.forEach(a=> rows.push([a.name, a.email, a.ts])); const csv = rows.map(r=> r.map(v=> `"${(v||'').toString().replaceAll('"','""')}"`).join(',')).join('\n'); download('attendees.csv', csv, 'text/csv'); });
+    document.getElementById('exportJSON').addEventListener('click', ()=>{ const json = JSON.stringify(state.attendeesLog, null, 2); download('attendees.json', json, 'application/json'); });
+
+    // Admin: suspend / reassign (demo only)
+    const adminToast = document.getElementById('adminToast');
+    document.getElementById('reassignBtn').addEventListener('click', ()=>{ adminToast.textContent = 'Reassign requested'; adminToast.classList.remove('hidden'); setTimeout(()=>adminToast.classList.add('hidden'), 2200); });
+    document.getElementById('suspendBtn').addEventListener('click', ()=>{ adminToast.textContent = 'Suspend requested'; adminToast.classList.remove('hidden'); setTimeout(()=>adminToast.classList.add('hidden'), 2200); });
+
+    // 30-day countdown label
+    function updateCountdown(){ const msLeft = state.betaEndsAt - Date.now(); const days = Math.max(0, Math.ceil(msLeft / (24*60*60*1000))); document.getElementById('countdownLabel').textContent = `${days} day${days!==1?'s':''} remaining on beta access`; }
+    setInterval(updateCountdown, 60000); updateCountdown();
+
+    // Bottom nav
+    tabItems.forEach(btn=> btn.addEventListener('click', ()=> show(btn.getAttribute('data-nav'))));
+  </script>
+</body>
+</html>
